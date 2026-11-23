@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="lib">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/SecureWorkspace/lib/slf4j-api.jar!/" />
+      <root url="jar://$PROJECT_DIR$/SecureWorkspace/lib/sqlite-jdbc.jar!/" />
+      <root url="jar://$PROJECT_DIR$/SecureWorkspace/lib/slf4j-nop.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

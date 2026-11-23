@@ -21,7 +21,8 @@ public final class Services {
     private static final String RESET_FAILED="Invalid username, recovery code or ticket. Check them and try again.";
     public Registered register(String username,String password)throws Exception{
         username=username==null?"":username.trim();
-        if(username.length()<3||username.length()>50||password==null||password.length()<8||password.length()>128)throw new IllegalArgumentException("Username must be 3-50 characters and password 8-128 characters.");
+        if(username.length()<3||username.length()>50)throw new IllegalArgumentException("Username must be 3-50 characters.");
+        Security.validatePassword(password,username,"Password");
         String salt=Security.newSalt();int id;List<String> codes;
         try(Connection c=Db.open();PreparedStatement p=c.prepareStatement("INSERT INTO users(username,password_hash,salt,created_at) VALUES(?,?,?,?)",Statement.RETURN_GENERATED_KEYS)){
             c.setAutoCommit(false); // user + workspace + recovery codes are created together or not at all
@@ -199,7 +200,7 @@ public final class Services {
     public ResetResult resetPassword(String username,String secret,String newPassword,String confirm,String ip)throws Exception{
         username=username==null?"":username.trim();
         if(username.length()>100)username=username.substring(0,100);
-        if(newPassword==null||newPassword.length()<8||newPassword.length()>128)throw new IllegalArgumentException("New password must be 8 to 128 characters.");
+        Security.validatePassword(newPassword,username,"New password");
         if(!newPassword.equals(confirm))throw new IllegalArgumentException("The two new passwords do not match.");
         long now=System.currentTimeMillis();
         pruneAttempts(now);
@@ -271,7 +272,9 @@ public final class Services {
     }
     public void changeTemporaryPassword(int uid,String newPassword)throws Exception{
         if(!mustChangePassword(uid))throw new SecurityException("No temporary password change is pending for this account.");
-        if(newPassword==null||newPassword.length()<8)throw new IllegalArgumentException("New password must be at least 8 characters.");
+        String username="";
+        try(Connection c=Db.open();PreparedStatement p=c.prepareStatement("SELECT username FROM users WHERE id=?")){p.setInt(1,uid);try(ResultSet r=p.executeQuery()){if(r.next())username=r.getString(1);}}
+        Security.validatePassword(newPassword,username,"New password");
         String salt=Security.newSalt();
         try(Connection c=Db.open();PreparedStatement p=c.prepareStatement("UPDATE users SET password_hash=?,salt=?,must_change_password=0 WHERE id=?")){
             p.setString(1,Security.hash(newPassword,salt));p.setString(2,salt);p.setInt(3,uid);p.executeUpdate();

@@ -23,7 +23,13 @@ public final class Security {
     public static boolean verify(String password, String salt, String expected) throws Exception {
         return MessageDigest.isEqual(hash(password,salt).getBytes(java.nio.charset.StandardCharsets.UTF_8), expected.getBytes(java.nio.charset.StandardCharsets.UTF_8));
     }
-
+    /** Shared password rules for register, forgot-password and change-password. */
+    public static void validatePassword(String pw, String username, String label) {
+        if (pw == null || pw.length() < 8 || pw.length() > 128)
+            throw new IllegalArgumentException(label + " must be 8 to 128 characters.");
+        if (username != null && pw.equalsIgnoreCase(username.trim()))
+            throw new IllegalArgumentException(label + " must not be the same as the username.");
+}
     // ---- account recovery helpers -------------------------------------------------------------
 
     /** One recovery code: 16 random symbols = 80 bits of entropy, shown as XXXX-XXXX-XXXX-XXXX. */
